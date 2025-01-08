@@ -21,7 +21,6 @@ export default function App() {
   return (
     <div className="gap-2 grid grid-cols-2 sm:grid-cols-4">
       {list.map((item, index) => (
-        /* eslint-disable no-console */
         <Link
             key={item.title}
             href={item.href}
