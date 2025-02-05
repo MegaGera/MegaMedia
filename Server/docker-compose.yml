@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  megamedia_server:
+    image: megamedia_server
+    container_name: megamedia_server
+    build: .
+    ports: 
+      - "8080"
+    networks:
+      - megagera_network
+    volumes:
+      - ./static:/root/static
+
+networks:
+  megagera_network:
+    external: true
