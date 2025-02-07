@@ -45,7 +45,7 @@ func squareImage(img image.Image, bgColor color.Color) image.Image {
 }
 
 // saveImage saves an image to a file
-func saveImage(img image.Image, teamID string, teamDir string, filename string) error {
+func saveImage(img image.Image, teamID string, teamDir string, filename string, token string) error {
 
 	// Check if the file already exists
 	if _, err := os.Stat(filename); err == nil {
@@ -69,6 +69,13 @@ func saveImage(img image.Image, teamID string, teamDir string, filename string) 
 			return fmt.Errorf("failed to create POST request: %v", err)
 		}
 		req.Header.Set("Content-Type", "application/json")
+
+		if config.Cfg.AppEnv != "development" {
+			req.AddCookie(&http.Cookie{
+				Name:  "access_token",
+				Value: token,
+			})
+		}
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -119,17 +126,24 @@ func SquaredImageHandler(w http.ResponseWriter, r *http.Request, teamID string) 
 	if err != nil {
 		return fmt.Errorf("failed to read existing file: %v", err)
 	}
-	log.Printf("After reading file")
 
 	// Process the image to make it square
 	bgColor := color.Transparent
 	squaredImage := squareImage(img, bgColor)
 
-	log.Printf("After squared")
+	token := ""
+	if config.Cfg.AppEnv != "development" {
+		// Extract token from cookie
+		cookie, err := r.Cookie("access_token")
+		if err != nil {
+			http.Error(w, "Unauthorized: No token provided in squared", http.StatusUnauthorized)
+			return nil
+		}
+		token = cookie.Value
+	}
 
 	// Save the squared image
-	// outputFile := path.Join(teamDir, fmt.Sprintf("team_%s_squared.png", teamID))
-	err = saveImage(squaredImage, teamID, teamDir, newFilePath)
+	err = saveImage(squaredImage, teamID, teamDir, newFilePath, token)
 	if err != nil {
 		return fmt.Errorf("error saving image: %v", err)
 	}

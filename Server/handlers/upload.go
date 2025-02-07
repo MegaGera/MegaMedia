@@ -65,6 +65,21 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request, teamID string) e
 		}
 		req.Header.Set("Content-Type", "application/json")
 
+		if config.Cfg.AppEnv != "development" {
+			// Extract token from cookie
+			cookie, err := r.Cookie("access_token")
+			if err != nil {
+				http.Error(w, "Unauthorized: No token provided in upload", http.StatusUnauthorized)
+				return nil
+			}
+			token := cookie.Value
+
+			req.AddCookie(&http.Cookie{
+				Name:  "access_token",
+				Value: token,
+			})
+		}
+
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {

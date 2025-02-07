@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	"MegaMedia/internal/config"
-
-	"github.com/rs/cors"
 )
 
 func main() {
@@ -28,19 +26,8 @@ func main() {
 	// Middleware to validate API requests
 	protectedAPI := withValidationMiddleware(apiMux)
 
-	// Apply CORS only to API
-	var allowedOrigins []string
-	if config.Cfg.AppEnv == "development" {
-		allowedOrigins = []string{"*"}
-	} else {
-		allowedOrigins = []string{`/\.?megagera\.com$/`}
-	}
-	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   allowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type"},
-		AllowCredentials: true,
-	}).Handler(protectedAPI)
+	// Apply custom CORS middleware
+	corsHandler := customCORSMiddleware(protectedAPI)
 
 	// Create main mux to handle both API & static files
 	mainMux := http.NewServeMux()
@@ -52,35 +39,86 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", mainMux))
 }
 
-func withValidationMiddleware(next http.Handler) http.Handler {
+func customCORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extract token from cookie
-		cookie, err := r.Cookie("access_token")
-		if err != nil {
-			http.Error(w, "Unauthorized: No token provided", http.StatusUnauthorized)
-			return
-		}
-		token := cookie.Value
+		origin := r.Header.Get("Origin")
 
-		// Validate token with authentication microservice
-		if !validateToken(token) {
-			http.Error(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
-			return
+		// Allow all subdomains of megagera.com
+		if config.Cfg.AppEnv != "development" && (origin != "" && (strings.HasSuffix(origin, ".megagera.com") || origin == "https://megagera.com")) {
+			log.Printf("CORS request from allowed origin: %s", origin)
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+			// Handle preflight OPTIONS request
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+		} else if config.Cfg.AppEnv == "development" {
+			log.Printf("CORS request from development")
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+			// Handle preflight OPTIONS request
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+		} else {
+			log.Printf("CORS request from disallowed origin: %s", origin)
+			http.Error(w, "CORS request from disallowed origin", http.StatusForbidden)
 		}
 
-		// Proceed to the next handler if valid
 		next.ServeHTTP(w, r)
 	})
 }
 
+func withValidationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Only continue if is production
+		if config.Cfg.AppEnv != "development" {
+
+			// Extract token from cookie
+			cookie, err := r.Cookie("access_token")
+			if err != nil {
+				http.Error(w, "Unauthorized: No token provided main", http.StatusUnauthorized)
+				return
+			}
+			token := cookie.Value
+
+			// Validate token with authentication microservice
+			if !validateToken(token) {
+				http.Error(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			// Proceed to the next handler if valid
+			next.ServeHTTP(w, r)
+		} else {
+			// Proceed to the next handler
+			next.ServeHTTP(w, r)
+		}
+	})
+}
+
 func validateToken(token string) bool {
-	req, err := http.NewRequest("GET", config.Cfg.AppEnv, nil)
+	req, err := http.NewRequest("GET", config.Cfg.ValidateUri, nil)
 	if err != nil {
 		log.Println("Error creating request:", err)
 		return false
 	}
 
-	req.Header.Set("access_token", token)
+	log.Printf("access_token: %s", token)
+
+	req.AddCookie(&http.Cookie{
+		Name:  "access_token",
+		Value: token,
+	})
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -94,8 +132,10 @@ func validateToken(token string) bool {
 
 // teamHandler handles requests to /team/{team_id}/image
 func teamHandler(w http.ResponseWriter, r *http.Request) {
-	// Normalize path by removing trailing slash
-	r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK) // Preflight requests should return 200 OK
+		return
+	}
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -103,6 +143,7 @@ func teamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract the teamID from the URL
+	r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
 	operation := strings.TrimPrefix(r.URL.Path, "/megagoal/team/")
 	operationArray := strings.Split(operation, "/")
 
