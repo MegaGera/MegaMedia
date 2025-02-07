@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  GlobeAltIcon,
+  // GlobeAltIcon,
   HomeIcon,
   TrophyIcon,
 } from '@heroicons/react/24/outline';

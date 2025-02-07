@@ -37,7 +37,7 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [modalTeam, setModalTeam] = useState({} as Team);
-  const [newImage, setNewImage] = useState<File | null>(null);
+  const [newImage, setNewImage] = useState<FormData | null>(null);
   const [newImageSrc, setNewImageSrc] = useState<string | null>(null);
   const [focusPreviousImage, setFocusPreviousImage] = useState<string | null>(null);
   const [showModalView, setShowModalView] = useState<string | null>("main");
@@ -67,9 +67,9 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
     onOpen();
   };
 
-  const getSrcImageByTeamID = (teamID: string) => {
-    return `${CONFIG.megamediaServerApiUrl}/megagoal/teams/team_${teamID}.png`;
-  }
+  // const getSrcImageByTeamID = (teamID: string) => {
+  //   return `${CONFIG.megamediaServerApiUrl}/megagoal/teams/team_${teamID}.png`;
+  // }
 
   const getSrcImageByTeamIDCacheBuster = (teamID: string) => {
     const cacheBuster = new Date().getTime();
@@ -96,9 +96,10 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
     setShowN(prevShowTeams => prevShowTeams + 20);
   }
 
-  const uploadImage = async (teamID: string, image: File) => {
+  const uploadImage = async (teamID: string, image: FormData) => {
     try {
       await uploadTeamImage(teamID, image);
+      setShowModalView("main");
     } catch (error) {
       console.error(error);
     }
@@ -178,11 +179,11 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
                         src={getSrcImageByTeamIDCacheBuster(modalTeam.team.id.toString())}
                         width="100%" />
                       <div>
-                        <Button className="w-full mt-2 col-span-2" color="primary" onPress={() => document.getElementById('fileInput')?.click()}>
+                        <Button className="w-full mt-2 col-span-2" color="primary" onPress={() => document.getElementById('fileInput-main')?.click()}>
                           <h3 className="m-auto">Upload a new picture</h3>
                         </Button>
                         <input
-                          id="fileInput"
+                          id="fileInput-main"
                           type="file"
                           accept="image/*"
                           style={{ display: 'none' }}
@@ -192,8 +193,11 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
                               const reader = new FileReader();
                               reader.onload = (event) => {
                                 const newImageSrc = event.target?.result as string;
-                                setNewImage(file);
+                                const formData = new FormData();
+                                formData.append('image', file);
+                                setNewImage(formData);
                                 setNewImageSrc(newImageSrc);
+                                setShowModalView("replace");
                               };
                               reader.readAsDataURL(file);
                             }
@@ -205,7 +209,7 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
                 )}
                 {showModalView === "replace" && newImage && (
                   <>
-                    <ModalBody className='gap-2 grid-cols-2'>
+                    <ModalBody className='gap-2 grid grid-cols-2'>
                       <h3 className="m-auto">Old image</h3>
                       <h3 className="m-auto">New image</h3>
                       <Image
@@ -222,11 +226,11 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
                         shadow="sm"
                         src={newImageSrc as string}
                         width="100%" />
-                      <Button className="w-full mt-2 col-span-2" color="primary" onPress={() => document.getElementById('fileInput')?.click()}>
+                      <Button className="w-full mt-2 col-span-2" color="primary" onPress={() => document.getElementById('fileInput-replace')?.click()}>
                         <h3 className="m-auto">Upload another picture</h3>
                       </Button>
                       <input
-                        id="fileInput"
+                        id="fileInput-replace"
                         type="file"
                         accept="image/*"
                         style={{ display: 'none' }}
@@ -236,8 +240,11 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
                             const reader = new FileReader();
                             reader.onload = (event) => {
                               const newImageSrc = event.target?.result as string;
-                              setNewImage(file);
+                              const formData = new FormData();
+                              formData.append('image', file);
+                              setNewImage(formData);
                               setNewImageSrc(newImageSrc);
+                              setShowModalView("replace");
                             };
                             reader.readAsDataURL(file);
                           }
@@ -261,7 +268,7 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
                         }}
                         />
 
-                      {modalTeam.previous.length > 0 && modalTeam.previous.slice(0, modalTeam.previous.length).map((team_id: string, index: number) => (
+                      {modalTeam.previous && modalTeam.previous.length > 0 && modalTeam.previous.slice(0, modalTeam.previous.length).map((team_id: string) => (
                         <Image
                           key={team_id}
                           alt={team_id}
@@ -310,7 +317,7 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
                 )}
                 {showModalView === "replace" && newImage && (
                   <Button color="primary" onPress={() => {
-                    uploadImage(modalTeam.team.id.toString(), newImage as File);
+                    uploadImage(modalTeam.team.id.toString(), newImage);
                   }}>
                     Replace
                   </Button>

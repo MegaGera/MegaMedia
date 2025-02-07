@@ -2,10 +2,11 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { CONFIG } from '@/app/constants';
 
 // Define a helper function to add default headers and credentials to fetch calls
-async function fetchWithHeaders(url: string, options: RequestInit = {}) {
-  const defaultHeaders = {
+async function fetchWithHeaders(url: string, image: boolean, options: RequestInit = {}) {
+  // const contentType = !image ? 'application/json' : 'multipart/form-data';
+  const defaultHeaders: HeadersInit = !image ? {
     'Content-Type': 'application/json',
-  };
+  } : {}
 
   return fetch(url, {
     ...options,
@@ -19,7 +20,7 @@ async function fetchWithHeaders(url: string, options: RequestInit = {}) {
 
 export async function fetchTopLeagues() {
   console.log(`${CONFIG.megagoalServerApiUrl}`);
-  const response = await fetchWithHeaders(`${CONFIG.megagoalServerApiUrl}/league/top/`);
+  const response = await fetchWithHeaders(`${CONFIG.megagoalServerApiUrl}/league/top/`, false);
   if (!response.ok) {
     throw new Error('Failed to fetch top leagues.');
   }
@@ -38,7 +39,7 @@ export async function fetchTeams(countryFilter: string | null, leagueFilter: str
     params.set('season', seasonFilter.toString());
   }
 
-  const response = await fetchWithHeaders(`${CONFIG.megagoalServerApiUrl}/team/?${params.toString()}`);
+  const response = await fetchWithHeaders(`${CONFIG.megagoalServerApiUrl}/team?${params.toString()}`, false);
   if (!response.ok) {
     throw new Error('Failed to fetch teams.');
   }
@@ -49,7 +50,7 @@ export function useTopLeagues() {
   const result = useSuspenseQuery({
     queryKey: ['topLeagues'],
     queryFn: fetchTopLeagues,
-    suspense: true,
+    // suspense: true,
   });
   return result;
 }
@@ -58,29 +59,29 @@ export function useTeams(countryFilter: string | null, leagueFilter: string | nu
   const result = useSuspenseQuery({
     queryKey: ['teams', countryFilter, leagueFilter, seasonFilter],
     queryFn: () => fetchTeams(countryFilter, leagueFilter, seasonFilter),
-    suspense: true,
+    // suspense: true,
   });
   return result;
 }
 
-export function uploadTeamImage(teamID: string, image: File) {
-  const formData = new FormData();
-  formData.append('image', image);
-  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/image/`, {
+export function uploadTeamImage(teamID: string, image: FormData) {
+  // const formData = new FormData();
+  // formData.append('image', image);
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/image/`, true, {
     method: 'POST',
-    body: formData,
+    body: image,
     headers: {}, // Do not include 'Content-Type', as it is automatically set for FormData
   });
 }
 
 export function squaredTeamImage(teamID: string) {
-  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/squared/`, {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/squared/`, false, {
     method: 'POST',
   });
 }
 
 export function deleteTeamImage(teamID: string) {
-  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/delete/`, {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/delete/`, false, {
     method: 'POST',
   });
 }
