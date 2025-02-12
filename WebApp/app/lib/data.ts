@@ -65,9 +65,7 @@ export function useTeams(countryFilter: string | null, leagueFilter: string | nu
 }
 
 export function uploadTeamImage(teamID: string, image: FormData) {
-  // const formData = new FormData();
-  // formData.append('image', image);
-  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/image/`, true, {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagoal/team/${teamID}/image/`, true, {
     method: 'POST',
     body: image,
     headers: {}, // Do not include 'Content-Type', as it is automatically set for FormData
@@ -75,13 +73,32 @@ export function uploadTeamImage(teamID: string, image: FormData) {
 }
 
 export function squaredTeamImage(teamID: string) {
-  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/squared/`, false, {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagoal/team/${teamID}/squared/`, false, {
     method: 'POST',
   });
 }
 
 export function deleteTeamImage(teamID: string) {
-  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/megagoal/team/${teamID}/delete/`, false, {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagoal/team/${teamID}/delete/`, false, {
+    method: 'POST',
+  });
+}
+
+export function fetchMegageraLogos() {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagera/`, false, {
+    method: 'GET',
+  });
+}
+export function uploadMegageraImage(id: string, image: FormData) {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagera/${id}/upload/`, true, {
+    method: 'POST',
+    body: image,
+    headers: {}, // Do not include 'Content-Type', as it is automatically set for FormData
+  });
+}
+
+export function deleteMegageraImage(id: string, name: string) {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagera/${id}/delete/${name}/`, false, {
     method: 'POST',
   });
 }

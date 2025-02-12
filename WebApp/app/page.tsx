@@ -6,11 +6,11 @@ import {Card, CardBody, CardFooter, Image} from "@nextui-org/react";
 
 export default function App() {
   const list = [
-    // {
-    //   title: "MegaGera",
-    //   img: "/images/megagera.jpg",
-    //   href: "/megagera"
-    // },
+    {
+      title: "MegaGera",
+      img: "/images/megagera.jpg",
+      href: "/megagera"
+    },
     {
       title: "MegaGoal",
       img: "/images/fruit-1.jpg",

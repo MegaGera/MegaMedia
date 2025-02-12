@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  // GlobeAltIcon,
+  GlobeAltIcon,
   HomeIcon,
   TrophyIcon,
 } from '@heroicons/react/24/outline';
@@ -13,11 +13,11 @@ import clsx from 'clsx';
 // Depending on the size of the application, this would be stored in a database.
 const links = [
   { name: 'Home', href: '/', icon: HomeIcon },
-  // {
-  //   name: 'MegaGera',
-  //   href: '/dashboard/megagera',
-  //   icon: GlobeAltIcon,
-  // },
+  {
+    name: 'MegaGera',
+    href: '/megagera',
+    icon: GlobeAltIcon,
+  },
   { name: 'MegaGoal', href: '/megagoal', icon: TrophyIcon },
 ];
 

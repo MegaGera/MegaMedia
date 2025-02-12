@@ -2,7 +2,6 @@ package main
 
 import (
 	"MegaMedia/handlers"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -16,7 +15,8 @@ func main() {
 
 	// API routes
 	apiMux := http.NewServeMux()
-	apiMux.HandleFunc("/megagoal/team/", teamHandler)
+	apiMux.HandleFunc("/api/megagoal/", handlers.MegagoalHandler)
+	apiMux.HandleFunc("/api/megagera/", handlers.MegageraHandler)
 
 	// Static file serving (no CORS applied here)
 	staticMux := http.NewServeMux()
@@ -31,8 +31,9 @@ func main() {
 
 	// Create main mux to handle both API & static files
 	mainMux := http.NewServeMux()
-	mainMux.Handle("/megagoal/team/", corsHandler) // API with CORS
-	mainMux.Handle("/", staticMux)                 // Static files, no CORS
+	mainMux.Handle("/api/megagoal/", corsHandler) // API with CORS
+	mainMux.Handle("/api/megagera/", corsHandler)
+	mainMux.Handle("/", staticMux) // Static files, no CORS
 
 	// Start server
 	log.Println("Starting server on :8080...")
@@ -45,7 +46,6 @@ func customCORSMiddleware(next http.Handler) http.Handler {
 
 		// Allow all subdomains of megagera.com
 		if config.Cfg.AppEnv != "development" && (origin != "" && (strings.HasSuffix(origin, ".megagera.com") || origin == "https://megagera.com")) {
-			log.Printf("CORS request from allowed origin: %s", origin)
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -57,7 +57,6 @@ func customCORSMiddleware(next http.Handler) http.Handler {
 				return
 			}
 		} else if config.Cfg.AppEnv == "development" {
-			log.Printf("CORS request from development")
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -69,7 +68,6 @@ func customCORSMiddleware(next http.Handler) http.Handler {
 				return
 			}
 		} else {
-			log.Printf("CORS request from disallowed origin: %s", origin)
 			http.Error(w, "CORS request from disallowed origin", http.StatusForbidden)
 		}
 
@@ -79,7 +77,6 @@ func customCORSMiddleware(next http.Handler) http.Handler {
 
 func withValidationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		// Only continue if is production
 		if config.Cfg.AppEnv != "development" {
 
@@ -113,8 +110,6 @@ func validateToken(token string) bool {
 		return false
 	}
 
-	log.Printf("access_token: %s", token)
-
 	req.AddCookie(&http.Cookie{
 		Name:  "access_token",
 		Value: token,
@@ -128,61 +123,4 @@ func validateToken(token string) bool {
 	defer resp.Body.Close()
 
 	return resp.StatusCode == http.StatusOK
-}
-
-// teamHandler handles requests to /team/{team_id}/image
-func teamHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK) // Preflight requests should return 200 OK
-		return
-	}
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Extract the teamID from the URL
-	r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
-	operation := strings.TrimPrefix(r.URL.Path, "/megagoal/team/")
-	operationArray := strings.Split(operation, "/")
-
-	if len(operationArray) < 2 {
-		http.NotFound(w, r)
-		return
-	}
-
-	teamID := operationArray[0]
-	operationType := operationArray[1]
-
-	switch operationType {
-	case "squared":
-		// Handle the image squared
-		log.Printf("Squared image")
-		if err := handlers.SquaredImageHandler(w, r, teamID); err != nil {
-			http.Error(w, fmt.Sprintf("Error squaring image: %v", err), http.StatusInternalServerError)
-			return
-		}
-	case "image":
-		// Handle the image upload
-		log.Printf("Upload image")
-		if err := handlers.UploadImageHandler(w, r, teamID); err != nil {
-			http.Error(w, fmt.Sprintf("Error uploading image: %v", err), http.StatusInternalServerError)
-			return
-		}
-	case "delete":
-		// Handle the image deleted
-		log.Printf("Delete image")
-		if err := handlers.DeleteImageHandler(w, r, teamID); err != nil {
-			http.Error(w, fmt.Sprintf("Error deleting image: %v", err), http.StatusInternalServerError)
-			return
-		}
-	default:
-		http.NotFound(w, r)
-		return
-	}
-
-	// Success response
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Image uploaded successfully for team %s", teamID)
 }

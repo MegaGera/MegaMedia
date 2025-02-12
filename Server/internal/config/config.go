@@ -10,6 +10,7 @@ import (
 type Config struct {
 	AppEnv               string
 	MegagoalServerApiUrl string
+	MongoDBURI           string
 	ValidateUri          string
 }
 
@@ -35,6 +36,7 @@ func LoadConfig() {
 	// Populate config struct
 	Cfg = Config{
 		AppEnv:               os.Getenv("APP_ENV"),
+		MongoDBURI:           os.Getenv("MONGODB_URI"),
 		MegagoalServerApiUrl: os.Getenv("MEGAGOAL_SERVER_API_URL"),
 		ValidateUri:          os.Getenv("VALIDATE_URI"),
 	}
