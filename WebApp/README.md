@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MegaMedia - WebApp
 
-## Getting Started
+WebApp microservice built with [Next.js](https://nextjs.org/) (React) for *MegaMedia*.
 
-First, run the development server:
+## Table of Contents
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- [Service Description](#service-description)
+- [Project Composition](#project-composition)
+- [Dependencies](#dependencies)
+- [Environment Variables](#environment-variables)
+- [Development Server](#development-server)
+- [Build & Deploy](#build--deploy)
+
+## Service Description
+
+Web Application microservice for *MegaMedia* to handle the images of the rest of *Mega* services.
+
+There are common features for all the services like update images or delete the previous ones, but for each microservice there could be individual features like Square the *MegaGoal* images. Also the filters to search through the static files of each microservice are different, having to connect with the Server of these Services (for now only with *MegaGoal* but it will be expanded).
+
+UI responsive design. The design is adapted to be opened with big screens and mobile screens.
+
+![megamedia gif](static/screenshots/megamedia.gif)
+
+The application is already deployed and available at: [https://megamedia.megagera.com](https://megamedia.megagera.com)
+
+The deployment in production is done with [Docker](https://www.docker.com/).
+
+## Project composition
+
+This project is developed with TypeScript files. It's composed with the next modules: 
+
+- **Modals**:
+  - Validate the data models of the data retrieved from the API. Located in [`app/modals`](app/modals).
+
+- **Data**:
+  - Service file that triggers HTTP calls to *MegaMedia Server* and *MegaGoal Server*. Located in [`app/lib/data.ts`](app/lib/data.ts).
+
+- **UI Components**:
+  - UI Components for the different pages, cards, grid, items, filters...
+
+- **MegaGera and MegaGoal Pages**:
+  - Main pages for visualize static files of both services.
+
+The source code is under the [`app`](app) folder.
+
+## Dependencies
+
+The dependencies and the scripts are defined in the file [`package.json`](package.json) and managed with [pnpm](https://www.npmjs.com/).
+
+To install the dependencies run the command: `pnpm install`.
+
+## Environment Variables
+
+In: `.env.development` || `.env.production`
+
+```javascript
+NEXT_PUBLIC_MEGAGOAL_SERVER_API_URL=string
+NEXT_PUBLIC_MEGAMEDIA_SERVER_API_URL=string
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Development server
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Run `pnpm start:dev` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if detects any change of the source files.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Build & Deploy
 
-## Learn More
+[`Dockerfile`](Dockerfile) file builds the app for production and generates de Docker container.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[`docker-compose.yml`](docker-compose.yml) file manages the image and handle it easily within the *Mega* network.
