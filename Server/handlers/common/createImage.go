@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -52,10 +53,19 @@ func CreateImage(w http.ResponseWriter, r *http.Request, databaseName string, co
 		return fmt.Errorf("failed to create directory: %v", err)
 	}
 
-	// Generate a unique filename with timestamp
-	timestamp := time.Now().Format("20060102_150405")
-	fileName := fmt.Sprintf("%s_%s%s", imageName, timestamp, fileExtension)
+	// Generate a unique filename, adding timestamp only if file already exists
+	originalFileName := handler.Filename
+	fileNameWithoutExt := strings.TrimSuffix(originalFileName, fileExtension)
+	fileName := fmt.Sprintf("%s%s", fileNameWithoutExt, fileExtension)
 	filePath := path.Join(fileDir, fileName)
+
+	// Check if file already exists, if so add timestamp
+	if _, err := os.Stat(filePath); err == nil {
+		// File exists, add timestamp
+		timestamp := time.Now().Format("20060102_150405")
+		fileName = fmt.Sprintf("%s_%s%s", fileNameWithoutExt, timestamp, fileExtension)
+		filePath = path.Join(fileDir, fileName)
+	}
 
 	// Create the file on disk for the new image
 	destFile, err := os.Create(filePath)
