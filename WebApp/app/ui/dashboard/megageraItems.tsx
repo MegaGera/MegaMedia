@@ -7,12 +7,13 @@ import { Card, CardBody, CardFooter, Image, Button,
   ModalHeader,
   ModalBody,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
+  Input
 } from "@nextui-org/react";
 
 import clsx from 'clsx';
 
-import { deleteMegageraImage, fetchMegageraLogos, uploadMegageraImage } from '@/app/lib/data';
+import { deleteMegageraImage, fetchMegageraLogos, uploadMegageraImage, updateMegageraImageName } from '@/app/lib/data';
 import { Image as ModalImage } from '@/app/modals/image';
 import { CONFIG } from '@/app/constants';
 
@@ -26,6 +27,8 @@ export default function MegageraItems() {
   const [newImageSrc, setNewImageSrc] = useState<string | null>(null);
   const [focusPreviousImage, setFocusPreviousImage] = useState<string | null>(null);
   const [showModalView, setShowModalView] = useState<string | null>("main");
+  const [editName, setEditName] = useState<string>("");
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,6 +52,8 @@ export default function MegageraItems() {
     setNewImageSrc(null);
     setFocusPreviousImage(null);
     setShowModalView("main");
+    setEditName(image.name);
+    setIsEditingName(false);
     onOpen();
   };
 
@@ -87,6 +92,20 @@ export default function MegageraItems() {
     }
   }
 
+  const updateImageName = async () => {
+    try {
+      await updateMegageraImageName(modalImage.id, editName);
+      setModalImage({...modalImage, name: editName});
+      setIsEditingName(false);
+      // Refresh the data
+      const response = await fetchMegageraLogos();
+      const logos = await response.json();
+      setData(logos);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
   <>
     <div className="mt-5 gap-2 grid grid-cols-3 sm:grid-cols-5">
@@ -113,7 +132,49 @@ export default function MegageraItems() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1 m-auto">{modalImage.name}</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1 m-auto">
+                {isEditingName ? (
+                  <div className="flex gap-2 w-full">
+                    <Input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Enter new name"
+                      className="flex-1"
+                    />
+                    <Button 
+                      color="primary" 
+                      size="sm" 
+                      onPress={updateImageName}
+                      isDisabled={!editName.trim()}
+                    >
+                      Save
+                    </Button>
+                    <Button 
+                      color="default" 
+                      variant="light" 
+                      size="sm" 
+                      onPress={() => {
+                        setIsEditingName(false);
+                        setEditName(modalImage.name);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center w-full">
+                    <span>{modalImage.name}</span>
+                    <Button 
+                      color="primary" 
+                      variant="light" 
+                      size="sm" 
+                      onPress={() => setIsEditingName(true)}
+                    >
+                      Edit Name
+                    </Button>
+                  </div>
+                )}
+              </ModalHeader>
                 {showModalView === "main" && (
                   <>
                     <ModalBody className='gap-0 grid grid-cols-1'>

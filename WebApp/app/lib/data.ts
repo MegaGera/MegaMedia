@@ -110,3 +110,10 @@ export function createMegageraImage(name: string, image: FormData) {
     headers: {}, // Do not include 'Content-Type', as it is automatically set for FormData
   });
 }
+
+export function updateMegageraImageName(id: string, newName: string) {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagera/${id}/update-name/`, false, {
+    method: 'POST',
+    body: JSON.stringify({ name: newName }),
+  });
+}

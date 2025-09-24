@@ -47,6 +47,13 @@ func MegageraHandler(w http.ResponseWriter, r *http.Request) {
 		operationType := operationArray[1]
 
 		switch operationType {
+		case "update-name":
+			// Handle updating image name
+			if err := commonHandlers.UpdateImageName(w, r, "megagera", "logo", imageID); err != nil {
+				http.Error(w, fmt.Sprintf("Error updating image name: %v", err), http.StatusInternalServerError)
+				return
+			}
+			return
 		case "upload":
 			// Handle the image upload
 			image, err := commonHandlers.FetchImageByID(w, r, "megagera", "logo", imageID)
