@@ -102,3 +102,11 @@ export function deleteMegageraImage(id: string, name: string) {
     method: 'POST',
   });
 }
+
+export function createMegageraImage(name: string, image: FormData) {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagera/create/`, true, {
+    method: 'POST',
+    body: image,
+    headers: {}, // Do not include 'Content-Type', as it is automatically set for FormData
+  });
+}

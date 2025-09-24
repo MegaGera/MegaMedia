@@ -20,8 +20,8 @@ func MegageraHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract the fileName from the URL
-	// r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
 	operation := strings.TrimPrefix(r.URL.Path, "/api/megagera/")
+	operation = strings.TrimSuffix(operation, "/")
 
 	if r.Method == http.MethodGet {
 		if operation == "" {
@@ -34,6 +34,14 @@ func MegageraHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if r.Method == http.MethodPost {
+		if operation == "create" {
+			// Handle creating a new image
+			if err := commonHandlers.CreateImage(w, r, "megagera", "logo", "megagera"); err != nil {
+				http.Error(w, fmt.Sprintf("Error creating image: %v", err), http.StatusInternalServerError)
+				return
+			}
+			return
+		}
 		operationArray := strings.Split(operation, "/")
 		imageID := operationArray[0]
 		operationType := operationArray[1]
