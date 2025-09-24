@@ -13,7 +13,7 @@ import { Card, CardBody, CardFooter, Image, Button,
 
 import clsx from 'clsx';
 
-import { deleteMegageraImage, fetchMegageraLogos, uploadMegageraImage, updateMegageraImageName } from '@/app/lib/data';
+import { deleteMegageraImage, fetchMegageraLogos, uploadMegageraImage, updateMegageraImageName, squaredMegageraImage } from '@/app/lib/data';
 import { Image as ModalImage } from '@/app/modals/image';
 import { CONFIG } from '@/app/constants';
 
@@ -101,6 +101,21 @@ export default function MegageraItems() {
       const response = await fetchMegageraLogos();
       const logos = await response.json();
       setData(logos);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const squaredImage = async () => {
+    try {
+      const response = await squaredMegageraImage(modalImage.id);
+      if (response.ok) {
+        // Refresh the data to show the updated image
+        const fetchResponse = await fetchMegageraLogos();
+        const logos = await fetchResponse.json();
+        setData(logos);
+        setShowModalView("main");
+      }
     } catch (error) {
       console.error(error);
     }
@@ -309,6 +324,13 @@ export default function MegageraItems() {
                   </>
                 )}
               <ModalFooter>
+                {showModalView === "main" && (
+                  <Button color="secondary" onPress={() => {
+                    squaredImage();
+                  }}>
+                    Squared
+                  </Button>
+                )}
                 {showModalView === "main" && modalImage.previous && modalImage.previous.length > 0 && (
                   <Button color="primary" onPress={() => {
                     setShowModalView("previous");

@@ -117,3 +117,9 @@ export function updateMegageraImageName(id: string, newName: string) {
     body: JSON.stringify({ name: newName }),
   });
 }
+
+export function squaredMegageraImage(id: string) {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagera/${id}/squared/`, false, {
+    method: 'POST',
+  });
+}

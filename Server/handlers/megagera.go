@@ -54,6 +54,26 @@ func MegageraHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			return
+		case "squared":
+			// Handle squaring the image
+			image, err := commonHandlers.FetchImageByID(w, r, "megagera", "logo", imageID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error fetching image: %v", err), http.StatusInternalServerError)
+				return
+			}
+			previousFileName, err := commonHandlers.SquaredMegageraImageHandler(w, r, "megagera", image.URL)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error squaring image: %v", err), http.StatusInternalServerError)
+				return
+			}
+			if previousFileName != "" {
+				// Update megamedia database (mongodb) adding the previous new file name
+				if err := commonHandlers.UpdateImagesPrevious(w, r, "megagera", "logo", image.ID, previousFileName, "add"); err != nil {
+					http.Error(w, fmt.Sprintf("Error updating in megamedia mongodb: %v", err), http.StatusInternalServerError)
+					return
+				}
+			}
+			return
 		case "upload":
 			// Handle the image upload
 			image, err := commonHandlers.FetchImageByID(w, r, "megagera", "logo", imageID)
