@@ -10,7 +10,6 @@ FROM alpine:3.18
 ENV GO_ENV=production
 WORKDIR /root/
 COPY --from=build /app/MegaMedia .
-COPY --from=build /app/static ./static
 COPY .env.production .env.development ./
 EXPOSE 8080
 CMD ["./MegaMedia"]
