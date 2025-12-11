@@ -79,7 +79,7 @@ export default function MegageraTopBar({ onImageAdded }: MegageraTopBarProps) {
 
       <Modal isOpen={isOpen} onClose={handleClose} size="md">
         <ModalContent>
-          {(onClose) => (
+          {() => (
             <>
               <ModalHeader className="flex flex-col gap-1">
                 Add New Image
