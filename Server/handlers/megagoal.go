@@ -76,44 +76,44 @@ func MegagoalHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	collection := operationArray[0]
-	teamID := operationArray[1]
+	itemID := operationArray[1]
 	operationType := operationArray[2]
 
 	if collection == "team" {
 		switch operationType {
 		case "squared":
 			// Handle the image squared
-			previousFileName, err := commonHandlers.SquaredImageHandler(w, r, "/megagoal/teams/", "team_"+teamID)
+			previousFileName, err := commonHandlers.SquaredImageHandler(w, r, "/megagoal/teams/", "team_"+itemID)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error squaring image: %v", err), http.StatusInternalServerError)
 				return
 			}
 			if previousFileName != "" {
 				// Send a POST request to megagoal server to notify about update old file
-				if err := megagoalServerUpdate(w, r, teamID, previousFileName, "add"); err != nil {
+				if err := megagoalServerUpdate(w, r, itemID, previousFileName, "add"); err != nil {
 					http.Error(w, fmt.Sprintf("Error sending POST request to megagoal: %v", err), http.StatusInternalServerError)
 					return
 				}
 			}
 		case "image":
 			// Handle the image upload
-			previousFileName, err := commonHandlers.UploadImageHandler(w, r, "/megagoal/teams/", "team_"+teamID)
+			previousFileName, err := commonHandlers.UploadImageHandler(w, r, "/megagoal/teams/", "team_"+itemID)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error uploading image: %v", err), http.StatusInternalServerError)
 				return
 			}
 			if previousFileName != "" {
 				// Send a POST request to megagoal server to notify about update old file
-				if err := megagoalServerUpdate(w, r, teamID, previousFileName, "add"); err != nil {
+				if err := megagoalServerUpdate(w, r, itemID, previousFileName, "add"); err != nil {
 					http.Error(w, fmt.Sprintf("Error sending POST request to megagoal: %v", err), http.StatusInternalServerError)
 					return
 				}
 			}
 		case "delete":
 			// Handle the image deleted
-			previousFileName := teamID
+			previousFileName := itemID
 			// Split the teamID by "_" and take the second position
-			parts := strings.Split(teamID, "_")
+			parts := strings.Split(itemID, "_")
 			if len(parts) < 2 {
 				http.Error(w, "invalid previousFileName / teamID format", http.StatusInternalServerError)
 			}
@@ -135,7 +135,36 @@ func MegagoalHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Success response
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Image uploaded successfully for team %s", teamID)
+		fmt.Fprintf(w, "Image uploaded successfully for team %s", itemID)
+	} else if collection == "league" {
+		// League operations: /api/megagoal/league/{leagueID}/{imageType}/
+		// imageType can be "sm" or "back"
+		if len(operationArray) < 3 {
+			http.NotFound(w, r)
+			return
+		}
+
+		leagueID := itemID
+		imageType := operationType // "sm" or "back"
+
+		// Validate imageType
+		if imageType != "sm" && imageType != "back" {
+			http.Error(w, "Invalid image type. Must be 'sm' or 'back'", http.StatusBadRequest)
+			return
+		}
+
+		// Handle the image upload for league
+		// The fileName includes the subdirectory (sm or back) and leagueID
+		fileName := fmt.Sprintf("%s/%s", imageType, leagueID)
+		_, err := commonHandlers.UploadImageHandler(w, r, "/megagoal/leagues/", fileName)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error uploading league image: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Success response
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "Image uploaded successfully for league %s (%s)", leagueID, imageType)
 	} else {
 		http.NotFound(w, r)
 	}

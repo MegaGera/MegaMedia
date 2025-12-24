@@ -121,7 +121,7 @@ export default function MegagoalFilters({ order, setOrder }: MegagoalFiltersProp
           label="Search by league"
           onSelectionChange={onSelectionChangeLeagueFilter}
         >
-          {(topLeague: League) => <AutocompleteItem key={topLeague.league.id}>{topLeague.league.name}</AutocompleteItem>}
+          {(topLeague: League) => <AutocompleteItem key={topLeague.league_id}>{topLeague.league_name}</AutocompleteItem>}
         </Autocomplete>
 
         <Autocomplete

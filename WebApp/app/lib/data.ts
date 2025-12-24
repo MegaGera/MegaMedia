@@ -20,7 +20,7 @@ async function fetchWithHeaders(url: string, image: boolean, options: RequestIni
 
 export async function fetchTopLeagues() {
   console.log(`${CONFIG.megagoalServerApiUrl}`);
-  const response = await fetchWithHeaders(`${CONFIG.megagoalServerApiUrl}/league/top/`, false);
+  const response = await fetchWithHeaders(`${CONFIG.megagoalServerApiUrl}/league/settings/`, false);
   if (!response.ok) {
     throw new Error('Failed to fetch top leagues.');
   }
@@ -81,6 +81,14 @@ export function squaredTeamImage(teamID: string) {
 export function deleteTeamImage(teamID: string) {
   return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagoal/team/${teamID}/delete/`, false, {
     method: 'POST',
+  });
+}
+
+export function uploadLeagueImage(leagueID: string, imageType: 'sm' | 'back', image: FormData) {
+  return fetchWithHeaders(`${CONFIG.megamediaServerApiUrl}/api/megagoal/league/${leagueID}/${imageType}/`, true, {
+    method: 'POST',
+    body: image,
+    headers: {}, // Do not include 'Content-Type', as it is automatically set for FormData
   });
 }
 

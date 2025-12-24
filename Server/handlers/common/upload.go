@@ -39,6 +39,11 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request, staticRoute stri
 
 	// Construct the file path to store the new image
 	newFilePath := path.Join(fileDir, fmt.Sprintf("%s%s", fileName, fileExtension))
+
+	// Ensure the directory for the file exists (in case fileName contains subdirectories)
+	if err = os.MkdirAll(path.Dir(newFilePath), os.ModePerm); err != nil {
+		return "", fmt.Errorf("failed to create subdirectory: %v", err)
+	}
 	newFileName := ""
 
 	// Check if the file already exists
