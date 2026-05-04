@@ -136,23 +136,37 @@ export default function MegagoalItems({ order }: MegagoalItemsProps) {
   <>
     <div className="mt-5 gap-2 grid grid-cols-3 sm:grid-cols-10">
 
-      {showTeams && showTeams.slice(0, showN).map((team: Team, index: number) => (
-        <Card className='w-[90%] m-auto h-full' key={index} isPressable shadow="sm" onPress={() => handleOpen(team)}>
-          <CardBody className="overflow-visible p-0 m-auto">
-            <Image
-              alt={team.team.name}
-              className="w-full object-cover h-full p-2"
-              radius="lg"
-              shadow="sm"
-              // src={getSrcImageByTeamID(team.team.id.toString())}
-              src={getSrcImageByTeamIDCacheBuster(team.team.id.toString())}
-              width="100%" />
-          </CardBody>
-          <CardFooter className="text-small grid">
-            <b>{team.team.name}</b>
-            <p className="text-default-500">{team.team.id}</p>
-          </CardFooter>
-        </Card>
+      {showTeams && showTeams.slice(0, showN).map((team: Team) => (
+        <div
+          key={team.team.id}
+          role="button"
+          tabIndex={0}
+          className="outline-none rounded-2xl focus-visible:ring-2 focus-visible:ring-primary"
+          onClick={() => handleOpen(team)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleOpen(team);
+            }
+          }}
+        >
+          <Card className="w-[90%] m-auto h-full cursor-pointer" shadow="sm">
+            <CardBody className="overflow-visible p-0 m-auto">
+              <Image
+                alt={team.team.name}
+                className="w-full object-cover h-full p-2"
+                radius="lg"
+                shadow="sm"
+                draggable={false}
+                src={getSrcImageByTeamIDCacheBuster(team.team.id.toString())}
+                width="100%" />
+            </CardBody>
+            <CardFooter className="text-small grid">
+              <b>{team.team.name}</b>
+              <p className="text-default-500">{team.team.id}</p>
+            </CardFooter>
+          </Card>
+        </div>
       ))}
       {showTeams && teams.length > showN && (
         <div className="col-span-10 flex justify-center m-auto mt-4">

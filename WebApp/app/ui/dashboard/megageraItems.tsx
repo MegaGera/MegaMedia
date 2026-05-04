@@ -125,22 +125,37 @@ export default function MegageraItems() {
   <>
     <div className="mt-5 gap-2 grid grid-cols-3 sm:grid-cols-5">
 
-      {data && data.map((image: ModalImage, index: number) => (
-        <Card className='w-[90%] m-auto h-full' key={index} isPressable shadow="sm" onPress={() => handleOpen(image)}>
-          <CardBody className="overflow-visible p-0 m-auto">
-            <Image
-              alt={image.name}
-              className="w-full object-cover h-full p-2"
-              radius="lg"
-              shadow="sm"
-              src={getSrcImageCacheBuster(image.url.toString())}
-              width="100%" />
-          </CardBody>
-          <CardFooter className="text-small grid">
-            <b>{image.name}</b>
-            <p className="text-default-500">{image.widthPX}px x {image.heightPX}px</p>
-          </CardFooter>
-        </Card>
+      {data && data.map((image: ModalImage) => (
+        <div
+          key={image.id}
+          role="button"
+          tabIndex={0}
+          className="outline-none rounded-2xl focus-visible:ring-2 focus-visible:ring-primary"
+          onClick={() => handleOpen(image)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleOpen(image);
+            }
+          }}
+        >
+          <Card className="w-[90%] m-auto h-full cursor-pointer" shadow="sm">
+            <CardBody className="overflow-visible p-0 m-auto">
+              <Image
+                alt={image.name}
+                className="w-full object-cover h-full p-2"
+                radius="lg"
+                shadow="sm"
+                draggable={false}
+                src={getSrcImageCacheBuster(image.url.toString())}
+                width="100%" />
+            </CardBody>
+            <CardFooter className="text-small grid">
+              <b>{image.name}</b>
+              <p className="text-default-500">{image.widthPX}px x {image.heightPX}px</p>
+            </CardFooter>
+          </Card>
+        </div>
       ))}
 
       <Modal isOpen={isOpen} size='md' onClose={onClose}>

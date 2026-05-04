@@ -25,9 +25,9 @@ export default function App() {
         <Link
             key={item.title}
             href={item.href}
-            className='w-full'
+            className="block w-full"
           >
-          <Card className='w-[90%] m-auto' key={index} isPressable shadow="sm" onPress={() => console.log("item pressed")}>
+          <Card className="w-[90%] m-auto" key={index} shadow="sm">
             <CardBody className="overflow-hidden p-0">
               <Image
                 alt={item.title}

@@ -85,22 +85,37 @@ export default function MegagoalLeaguesItems({ order }: MegagoalLeaguesItemsProp
   <>
     <div className="mt-5 gap-2 grid grid-cols-3 sm:grid-cols-10">
 
-      {showLeagues && showLeagues.slice(0, showN).map((league: League, index: number) => (
-        <Card className='w-[90%] m-auto h-full' key={index} isPressable shadow="sm" onPress={() => handleOpen(league)}>
-          <CardBody className="overflow-visible p-0 m-auto">
-            <Image
-              alt={league.league_name}
-              className="w-full object-cover h-full p-2"
-              radius="lg"
-              shadow="sm"
-              src={getSrcImageByLeagueIDCacheBuster(league.league_id.toString())}
-              width="100%" />
-          </CardBody>
-          <CardFooter className="text-small grid">
-            <b>{league.league_name}</b>
-            <p className="text-default-500">{league.league_id}</p>
-          </CardFooter>
-        </Card>
+      {showLeagues && showLeagues.slice(0, showN).map((league: League) => (
+        <div
+          key={league.league_id}
+          role="button"
+          tabIndex={0}
+          className="outline-none rounded-2xl focus-visible:ring-2 focus-visible:ring-primary"
+          onClick={() => handleOpen(league)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleOpen(league);
+            }
+          }}
+        >
+          <Card className="w-[90%] m-auto h-full cursor-pointer" shadow="sm">
+            <CardBody className="overflow-visible p-0 m-auto">
+              <Image
+                alt={league.league_name}
+                className="w-full object-cover h-full p-2"
+                radius="lg"
+                shadow="sm"
+                draggable={false}
+                src={getSrcImageByLeagueIDCacheBuster(league.league_id.toString())}
+                width="100%" />
+            </CardBody>
+            <CardFooter className="text-small grid">
+              <b>{league.league_name}</b>
+              <p className="text-default-500">{league.league_id}</p>
+            </CardFooter>
+          </Card>
+        </div>
       ))}
       {showLeagues && leagues && leagues.length > showN && (
         <div className="col-span-10 flex justify-center m-auto mt-4">
