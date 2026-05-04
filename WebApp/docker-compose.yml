@@ -1,9 +1,9 @@
 version: "3.8"
 
 services:
-  megamedia:
-    image: megamedia
-    container_name: megamedia
+  megamedia_webapp:
+    image: megamedia_webapp
+    container_name: megamedia_webapp
     build: .
     ports: 
       - "3000"
