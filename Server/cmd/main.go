@@ -47,8 +47,15 @@ func customCORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 
+		// No Origin: same-origin navigation, curl, or server-to-server (e.g. Otto → MegaMedia).
+		// CORS headers are not needed; must not fall through after a rejected browser origin.
+		if origin == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// Allow all subdomains of megagera.com
-		if config.Cfg.AppEnv != "development" && (origin != "" && (strings.HasSuffix(origin, ".megagera.com") || origin == "https://megagera.com")) {
+		if config.Cfg.AppEnv != "development" && (strings.HasSuffix(origin, ".megagera.com") || origin == "https://megagera.com") {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -72,6 +79,7 @@ func customCORSMiddleware(next http.Handler) http.Handler {
 			}
 		} else {
 			http.Error(w, "CORS request from disallowed origin", http.StatusForbidden)
+			return
 		}
 
 		next.ServeHTTP(w, r)
