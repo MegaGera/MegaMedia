@@ -55,11 +55,13 @@ The dependencies and the scripts are defined in the file [`go.mod`](go.mod).
 In: `.env.development` || `.env.production`
 
 ```javascript
-APP_ENV=string
+APP_ENV=string   // optional; if unset, defaults to production when GO_ENV=production (see config)
 MONGODB_URI=string
 MEGAGOAL_SERVER_API_URL=string
 VALIDATE_URI=string
 ```
+
+Production: ensure reverse proxies allow large uploads (e.g. nginx `client_max_body_size` ≥ 12m on routes to MegaMedia and Otto).
 
 ## Development server
 

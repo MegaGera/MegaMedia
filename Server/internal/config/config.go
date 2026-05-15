@@ -33,13 +33,24 @@ func LoadConfig() {
 		log.Fatalf("Error loading %s file: %v", envFile, err)
 	}
 
+	appEnv := os.Getenv("APP_ENV")
+	// Dockerfile often sets GO_ENV=production while .env forgets APP_ENV; empty string is
+	// not "development" and would accidentally enable auth + strict CORS paths.
+	if appEnv == "" {
+		if env == "production" {
+			appEnv = "production"
+		} else {
+			appEnv = "development"
+		}
+	}
+
 	// Populate config struct
 	Cfg = Config{
-		AppEnv:               os.Getenv("APP_ENV"),
+		AppEnv:               appEnv,
 		MongoDBURI:           os.Getenv("MONGODB_URI"),
 		MegagoalServerApiUrl: os.Getenv("MEGAGOAL_SERVER_API_URL"),
 		ValidateUri:          os.Getenv("VALIDATE_URI"),
 	}
 
-	log.Printf("Loaded configuration for %s", env)
+	log.Printf("Loaded configuration GO_ENV=%s APP_ENV=%s", env, Cfg.AppEnv)
 }

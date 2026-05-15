@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"runtime/debug"
 	"strings"
 )
 
@@ -45,6 +46,14 @@ func randomSixDigitSuffix() (string, error) {
 // Files are stored under ./static/otto/ as name_XXXXXX.ext (ext from the uploaded file).
 // Returns the public URL path (e.g. /otto/foo_012345.jpg).
 func UploadOttoImage(r *http.Request) (publicURLPath string, err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			log.Printf("UploadOttoImage panic: %v\n%s", p, debug.Stack())
+			publicURLPath = ""
+			err = fmt.Errorf("internal upload error")
+		}
+	}()
+
 	if err := r.ParseMultipartForm(ottoMaxMultipartBytes); err != nil {
 		return "", fmt.Errorf("failed to parse form: %v", err)
 	}
@@ -64,7 +73,14 @@ func UploadOttoImage(r *http.Request) (publicURLPath string, err error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to retrieve file: %v", err)
 	}
-	defer file.Close()
+	if file == nil || handler == nil {
+		return "", fmt.Errorf("failed to retrieve file: missing file or header")
+	}
+	defer func() {
+		if file != nil {
+			_ = file.Close()
+		}
+	}()
 
 	ext := path.Ext(handler.Filename)
 	if ext == "" {
@@ -86,7 +102,7 @@ func UploadOttoImage(r *http.Request) (publicURLPath string, err error) {
 		newFilePath := path.Join(fileDir, stem+ext)
 
 		if _, err := os.Stat(newFilePath); err == nil {
-			continue // rare collision; retry
+			continue // rare collision; retry (file not read yet)
 		} else if !os.IsNotExist(err) {
 			return "", fmt.Errorf("failed to stat file: %v", err)
 		}

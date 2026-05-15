@@ -4,6 +4,7 @@ import (
 	"MegaMedia/handlers"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"MegaMedia/internal/config"
@@ -12,6 +13,12 @@ import (
 func main() {
 	// Load environment variables
 	config.LoadConfig() // Load config once
+
+	for _, dir := range []string{"static/otto", "static/megagoal", "static/megagera"} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			log.Fatalf("cannot create %s: %v", dir, err)
+		}
+	}
 
 	// API routes
 	apiMux := http.NewServeMux()
