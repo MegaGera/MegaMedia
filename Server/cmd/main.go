@@ -17,11 +17,13 @@ func main() {
 	apiMux := http.NewServeMux()
 	apiMux.HandleFunc("/api/megagoal/", handlers.MegagoalHandler)
 	apiMux.HandleFunc("/api/megagera/", handlers.MegageraHandler)
+	apiMux.HandleFunc("/api/otto/", handlers.OttoHandler)
 
 	// Static file serving (no CORS applied here)
 	staticMux := http.NewServeMux()
 	staticMux.Handle("/megagoal/", http.StripPrefix("/megagoal/", http.FileServer(http.Dir("./static/megagoal"))))
 	staticMux.Handle("/megagera/", http.StripPrefix("/megagera/", http.FileServer(http.Dir("./static/megagera"))))
+	staticMux.Handle("/otto/", http.StripPrefix("/otto/", http.FileServer(http.Dir("./static/otto"))))
 
 	// Middleware to validate API requests
 	protectedAPI := withValidationMiddleware(apiMux)
@@ -33,6 +35,7 @@ func main() {
 	mainMux := http.NewServeMux()
 	mainMux.Handle("/api/megagoal/", corsHandler) // API with CORS
 	mainMux.Handle("/api/megagera/", corsHandler)
+	mainMux.Handle("/api/otto/", corsHandler)
 	mainMux.Handle("/", staticMux) // Static files, no CORS
 
 	// Start server
