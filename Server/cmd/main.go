@@ -14,7 +14,7 @@ func main() {
 	// Load environment variables
 	config.LoadConfig() // Load config once
 
-	for _, dir := range []string{"static/otto", "static/megagoal", "static/megagera"} {
+	for _, dir := range []string{"static/otto", "static/megagoal", "static/megagoal/users", "static/megagera"} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			log.Fatalf("cannot create %s: %v", dir, err)
 		}

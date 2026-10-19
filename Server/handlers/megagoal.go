@@ -3,6 +3,7 @@ package handlers
 import (
 	commonHandlers "MegaMedia/handlers/common"
 	"MegaMedia/internal/config"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -165,7 +166,62 @@ func MegagoalHandler(w http.ResponseWriter, r *http.Request) {
 		// Success response
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Image uploaded successfully for league %s (%s)", leagueID, imageType)
+	} else if collection == "user" && itemID == "profile" && operationType == "image" {
+		username, err := resolveProfileUploadUsername(r)
+		if err != nil {
+			status := http.StatusBadRequest
+			if err.Error() == "unauthorized" || err.Error() == "missing token" {
+				status = http.StatusUnauthorized
+			}
+			http.Error(w, fmt.Sprintf("Error resolving username: %v", err), status)
+			return
+		}
+
+		relativePath, err := commonHandlers.UploadUserProfileImage(r, username)
+		if err != nil {
+			status := http.StatusInternalServerError
+			msg := err.Error()
+			if strings.Contains(msg, "unsupported file type") ||
+				strings.Contains(msg, "no extension") ||
+				strings.Contains(msg, "failed to retrieve file") ||
+				strings.Contains(msg, "failed to parse form") ||
+				strings.Contains(msg, "invalid username") ||
+				strings.Contains(msg, "empty username") {
+				status = http.StatusBadRequest
+			}
+			http.Error(w, fmt.Sprintf("Error uploading profile image: %v", err), status)
+			return
+		}
+
+		body, err := json.Marshal(map[string]string{
+			"path": relativePath,
+			"url":  "/megagoal/" + relativePath,
+		})
+		if err != nil {
+			http.Error(w, "failed to encode response", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(body)
 	} else {
 		http.NotFound(w, r)
 	}
+}
+
+// resolveProfileUploadUsername uses JWT username in production; form "username" in development.
+// In development it parses the multipart form once so UploadUserProfileImage can reuse it.
+func resolveProfileUploadUsername(r *http.Request) (string, error) {
+	if config.Cfg.AppEnv != "development" {
+		cookie, err := r.Cookie("access_token")
+		if err != nil {
+			return "", fmt.Errorf("missing token")
+		}
+		return commonHandlers.UsernameFromAccessToken(cookie.Value)
+	}
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		return "", fmt.Errorf("failed to parse form: %v", err)
+	}
+	return commonHandlers.SanitizeProfileUsername(r.FormValue("username"))
 }
