@@ -209,19 +209,38 @@ func MegagoalHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// resolveProfileUploadUsername uses JWT username in production; form "username" in development.
-// In development it parses the multipart form once so UploadUserProfileImage can reuse it.
+// resolveProfileUploadUsername prefers the JWT username in production.
+// MegaGoal Server also sends username as query/form; used in development and as fallback
+// after the JWT middleware has already authenticated the request.
 func resolveProfileUploadUsername(r *http.Request) (string, error) {
-	if config.Cfg.AppEnv != "development" {
-		cookie, err := r.Cookie("access_token")
-		if err != nil {
-			return "", fmt.Errorf("missing token")
+	if r.MultipartForm == nil {
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			return "", fmt.Errorf("failed to parse form: %v", err)
 		}
-		return commonHandlers.UsernameFromAccessToken(cookie.Value)
 	}
 
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		return "", fmt.Errorf("failed to parse form: %v", err)
+	formUsername, formErr := commonHandlers.SanitizeProfileUsername(r.FormValue("username"))
+
+	if config.Cfg.AppEnv == "development" {
+		if formErr != nil {
+			return "", formErr
+		}
+		return formUsername, nil
 	}
-	return commonHandlers.SanitizeProfileUsername(r.FormValue("username"))
+
+	cookie, err := r.Cookie("access_token")
+	if err != nil {
+		return "", fmt.Errorf("missing token")
+	}
+
+	jwtUsername, jwtErr := commonHandlers.UsernameFromAccessToken(cookie.Value)
+	if jwtErr == nil {
+		return jwtUsername, nil
+	}
+
+	// Proxy fallback: valid cookie already checked by middleware; MegaGoal sends username.
+	if formErr == nil {
+		return formUsername, nil
+	}
+	return "", jwtErr
 }

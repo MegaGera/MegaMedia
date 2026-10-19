@@ -65,8 +65,21 @@ func UsernameFromAccessToken(token string) (string, error) {
 	}
 
 	var parsed authValidateResponse
-	if err := json.Unmarshal(body, &parsed); err != nil {
+	if err := json.Unmarshal(body, &parsed); err == nil {
+		if username, err := SanitizeProfileUsername(parsed.Data.Username); err == nil {
+			return username, nil
+		}
+	}
+
+	// Fallback for slightly different validate payload shapes.
+	var raw map[string]any
+	if err := json.Unmarshal(body, &raw); err != nil {
 		return "", fmt.Errorf("invalid validate response")
 	}
-	return SanitizeProfileUsername(parsed.Data.Username)
+	if data, ok := raw["data"].(map[string]any); ok {
+		if username, ok := data["username"].(string); ok {
+			return SanitizeProfileUsername(username)
+		}
+	}
+	return "", fmt.Errorf("empty username")
 }
